@@ -4,7 +4,7 @@
 
 ## Overview
 
-This project documents a complete threat hunt investigating an **agent-driven ransomware attack** against a fictional Linux-based AI infrastructure environment.
+This project documents a complete threat hunt investigating an **agent-driven ransomware attack** against a Linux-based AI infrastructure environment.
 
 The investigation covers the complete attack chain, from **initial access and command & control to credential access, lateral movement, privilege escalation, and ransomware impact**.
 
@@ -145,6 +145,9 @@ Syslog
     and SyslogMessage has "validate/code"
 | project TimeGenerated, SyslogMessage
 ```
+<img width="1162" height="336" alt="image" src="https://github.com/user-attachments/assets/4d5bffc1-63b4-462c-83de-c178d54a6fac" />
+
+<img width="943" height="348" alt="image" src="https://github.com/user-attachments/assets/240f6a7d-f08f-4e46-910e-e01d96197cea" />
 
 Process validation:
 
@@ -157,6 +160,8 @@ LinuxProcess_CL
           TargetProcessName,
           ActingProcessCommandLine
 ```
+<img width="1167" height="362" alt="image" src="https://github.com/user-attachments/assets/6f8a7eb6-c3fa-4933-89df-f0363deca937" />
+
 
 ### MITRE ATT&CK
 
@@ -191,6 +196,8 @@ LinuxProcess_CL
     total = count(),
     has_hash = countif(isnotempty(TargetProcessSHA256))
 ```
+<img width="1173" height="323" alt="image" src="https://github.com/user-attachments/assets/0648d5ee-3422-402c-97ab-3044745a2b5e" />
+
 
 The `TargetProcessSHA256` field was empty across the process telemetry.
 
@@ -246,6 +253,8 @@ LinuxNetwork_CL
     DstIpAddr,
     DstPortNumber
 ```
+<img width="986" height="495" alt="image" src="https://github.com/user-attachments/assets/23bcc103-c3b5-46e4-ad1a-65951da17d7b" />
+
 
 ### MITRE ATT&CK
 
@@ -265,10 +274,13 @@ langflow
 LinuxSystem_CL
 | where RunId =~ "jp-46-20260730"
 | where Facility =~ "cron"
-| project
-    TimeGenerated,
-    EventOriginalMessage
+| where computer =~ "ff-lf-01"
+| extend VisualIntervalle = bin(TimeGenerated, 30m)
+| summarize NombreExecutions = count() by VisualIntervalle, Mechanism = "cron", RunId, Facility
+| order by VisualIntervalle asc
 ```
+<img width="1197" height="375" alt="image" src="https://github.com/user-attachments/assets/2043fcb2-2f9a-4c95-8eab-63adaf749ffa" />
+
 
 ### MITRE ATT&CK
 
@@ -310,11 +322,9 @@ backup
 LinuxProcess_CL
 | where RunId =~ "jp-46-20260730"
 | where TargetProcessName =~ "pg_dump"
-| project
-    TimeGenerated,
-    TargetUsername,
-    TargetProcessCommandLine
+| project TimeGenerated, TargetUsername,TargetProcessCommandLine
 ```
+<img width="1272" height="427" alt="image" src="https://github.com/user-attachments/assets/d066654e-916e-4152-a717-76dc9b021791" />
 
 ### Detection Insight
 
@@ -359,12 +369,11 @@ The attacker classified credentials belonging to **8 provider families**:
 ```kql
 LLMAgentLogs_CL
 | where RunId =~ "jp-46-20260730"
-| where model_response has "keys"
-    and model_response has "provider"
-| project
-    TimeGenerated,
-    model_response
+| where model_response has "keys" and model_response has "provider"
+| project TimeGenerated, model_response
 ```
+<img width="1283" height="330" alt="image" src="https://github.com/user-attachments/assets/79d42a4b-bb84-43a7-a1de-924afc0d9090" />
+
 
 ### MITRE ATT&CK
 
@@ -387,13 +396,10 @@ This interpreter was associated with the internal network sweep.
 ```kql
 LinuxProcess_CL
 | where RunId =~ "jp-46-20260730"
-| where DvcHostname =~ "ff-lf-01"
-    and TargetProcessName =~ "python3.11"
-| project
-    TimeGenerated,
-    TargetProcessId,
-    ActingProcessCommandLine
+| where DvcHostname =~ "ff-lf-01" and TargetProcessName =~ "python3.11"
+| project TimeGenerated, TargetProcessId, ActingProcessCommandLine
 ```
+<img width="1443" height="442" alt="image" src="https://github.com/user-attachments/assets/2ae8fd91-ccd6-4aeb-ad3f-c992213e065f" />
 
 ---
 
@@ -413,12 +419,11 @@ The process contacted:
 LinuxNetwork_CL
 | where RunId =~ "jp-46-20260730"
 | where ActingProcessId == 4491
-| project
-    TimeGenerated,
-    DstIpAddr,
-    DstPortNumber
+| project TimeGenerated, DstIpAddr, DstPortNumber
 | sort by TimeGenerated asc
 ```
+<img width="1437" height="393" alt="image" src="https://github.com/user-attachments/assets/b30f0fdc-a86b-4e38-a58a-93136ee7f2a2" />
+
 
 ### MITRE ATT&CK
 
@@ -460,12 +465,12 @@ These files potentially contained infrastructure and credential information.
 ```kql
 Syslog
 | where RunId_CF =~ "jp-46-20260730"
-| where Computer =~ "ff-minio-01"
-    and SyslogMessage has "GetObject"
-| project
-    TimeGenerated,
-    SyslogMessage
+| where Computer =~ "ff-minio-01" and SyslogMessage has "GetObject"
+| project TimeGenerated,  SyslogMessage
 ```
+<img width="1402" height="412" alt="image" src="https://github.com/user-attachments/assets/8c246a89-f021-4297-bd44-28525cdcaf3e" />
+
+
 
 ### MITRE ATT&CK
 
@@ -496,12 +501,11 @@ Instead of stopping, the agent adapted its parser and retried the request.
 ```kql
 LLMAgentLogs_CL
 | where RunId =~ "jp-46-20260730"
-| where model_response has "XML"
-    or model_response has "JSON"
-| project
-    TimeGenerated,
-    model_response
+| where model_response has "XML" or model_response has "JSON"
+| project TimeGenerated, model_response
 ```
+<img width="1596" height="507" alt="image" src="https://github.com/user-attachments/assets/818b116a-8728-4fde-84fa-dd712f9d59f6" />
+
 
 This provides behavioral evidence of an automated agent adapting its execution based on tool output.
 
@@ -526,12 +530,11 @@ Blank password hash
 ```kql
 Syslog
 | where RunId_CF =~ "jp-46-20260730"
-| where Computer =~ "ff-nacos-01"
-    and SyslogMessage has "403"
-| project
-    TimeGenerated,
-    SyslogMessage
+| where Computer =~ "ff-nacos-01" and SyslogMessage has "403"
+| project TimeGenerated, SyslogMessage
 ```
+<img width="1580" height="477" alt="image" src="https://github.com/user-attachments/assets/0220147d-a2a2-4497-a535-5e97d57bd1dc" />
+
 
 The attempted technique was associated with:
 
@@ -561,12 +564,11 @@ UID: 997
 ```kql
 LinuxAudit_CL
 | where RunId =~ "jp-46-20260730"
-| where Computer =~ "ff-nacos-01"
-    and AuditType =~ "ADD_USER"
-| project
-    TimeGenerated,
-    EventOriginalMessage
+| where Computer =~ "ff-nacos-01" and AuditType =~ "ADD_USER"
+| project TimeGenerated, EventOriginalMessage
 ```
+<img width="1588" height="466" alt="image" src="https://github.com/user-attachments/assets/3bdbd465-0f17-44d8-a506-7af4d8df84af" />
+
 
 ### Account Created
 
@@ -604,14 +606,10 @@ The available fields were insufficient to establish which containers were visibl
 ```kql
 LinuxContainer_CL
 | where RunId =~ "jp-46-20260730"
-| project
-    TimeGenerated,
-    Computer,
-    RuntimeService,
-    Operation,
-    ContainerId,
-    ImageName
+| project TimeGenerated, Computer, RuntimeService, Operation
 ```
+<img width="1415" height="338" alt="image" src="https://github.com/user-attachments/assets/cbb607d9-8e34-49fd-9b29-87cda929d2f3" />
+
 
 ### Finding
 
@@ -657,15 +655,11 @@ history
 ```kql
 Syslog
 | where RunId_CF =~ "jp-46-20260730"
-| where Computer =~ "ff-db-01"
-    and (
-        SyslogMessage has "AES_ENCRYPT"
-        or SyslogMessage has "DROP TABLE"
-    )
-| project
-    TimeGenerated,
-    SyslogMessage
+| where Computer =~ "ff-db-01" and (SyslogMessage has "AES_ENCRYPT" or SyslogMessage has "DROP TABLE")
+| project TimeGenerated, SyslogMessage
 ```
+<img width="1417" height="382" alt="image" src="https://github.com/user-attachments/assets/8d146f27-0e49-4d1e-988f-a2a0e4391c30" />
+
 
 ### MITRE ATT&CK
 
@@ -695,12 +689,11 @@ The note referenced the following Bitcoin address:
 ```kql
 Syslog
 | where RunId_CF =~ "jp-46-20260730"
-| where Computer =~ "ff-db-01"
-    and SyslogMessage has "README_RANSOM"
-| project
-    TimeGenerated,
-    SyslogMessage
+| where Computer =~ "ff-db-01" and SyslogMessage has "README_RANSOM"
+| project TimeGenerated, SyslogMessage
 ```
+<img width="1422" height="367" alt="image" src="https://github.com/user-attachments/assets/4601b092-2b96-459e-8a28-e928c5d367b0" />
+
 
 The investigation notes that this address corresponds to a Bitcoin documentation/example address rather than a usable ransom-payment destination.
 
@@ -734,6 +727,8 @@ LLMAgentLogs_CL
 | summarize count() by actor, session_id
 | sort by count_ desc
 ```
+<img width="1417" height="447" alt="image" src="https://github.com/user-attachments/assets/2923cbae-d4ac-4f1a-8991-fd2319a64d04" />
+
 
 Further investigation:
 
@@ -741,8 +736,10 @@ Further investigation:
 LLMAgentLogs_CL
 | where RunId =~ "jp-46-20260730"
 | where session_id == "jp-7f3c9a21"
-| summarize count() by actor
+| summarize count() by actor, model_response
 ```
+<img width="1412" height="618" alt="image" src="https://github.com/user-attachments/assets/344366cb-611f-4a43-98aa-de1e982b5471" />
+
 
 ### Evidence
 
@@ -800,10 +797,11 @@ as the parent.
 ```kql
 LinuxProcess_CL
 | where RunId =~ "jp-46-20260730"
-| where DvcHostname =~ "ff-lf-01"
-    and TargetProcessName =~ "python3.11"
+| where DvcHostname =~ "ff-lf-01" and TargetProcessName =~ "python3.11"
 | summarize count() by ActingProcessName
 ```
+<img width="1417" height="305" alt="image" src="https://github.com/user-attachments/assets/b975dc35-0023-4b13-8be9-09c32eac1290" />
+
 
 This demonstrates why:
 
@@ -848,12 +846,11 @@ The suspicious C2 connection used:
 ```kql
 LinuxNetwork_CL
 | where RunId =~ "jp-46-20260730"
-| where DvcHostname =~ "ff-lf-01"
-    and DstIpAddr !startswith "10."
-| summarize count() by
-    DstIpAddr,
-    DstPortNumber
+| where DvcHostname =~ "ff-lf-01" and DstIpAddr !startswith "10."
+| summarize count() by DstIpAddr, DstPortNumber
 ```
+<img width="1412" height="425" alt="image" src="https://github.com/user-attachments/assets/78f33698-bc14-485f-bdeb-4a0fb3ae27d1" />
+
 
 The investigation therefore used **connection behavior and port context**, rather than relying solely on the destination IP.
 
@@ -872,6 +869,8 @@ The entire chain occurred over approximately:
 Legitimate Python activity was distributed throughout the working day, while the attack activity formed a concentrated cluster.
 
 This temporal characteristic was useful for separating malicious activity from the normal operational baseline.
+
+<img width="1413" height="451" alt="image" src="https://github.com/user-attachments/assets/716642cf-4902-4c06-aea8-1297a2cb4c3e" />
 
 ---
 
@@ -1155,12 +1154,6 @@ The investigation showed rapid execution, self-correction, and machine-speed pro
 * MITRE ATLAS
 * KQL / Microsoft security telemetry concepts
 
----
 
-## Disclaimer
-
-This repository documents a controlled threat-hunting exercise using a fictional environment and simulated security telemetry.
-
-It is intended for **defensive cybersecurity education, threat hunting practice, detection engineering, and SOC portfolio development**.
 
 No real-world systems were targeted as part of this project.
