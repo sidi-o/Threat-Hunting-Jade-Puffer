@@ -1162,7 +1162,3 @@ The investigation showed rapid execution, self-correction, and machine-speed pro
 * MITRE ATT&CK
 * MITRE ATLAS
 * KQL / Microsoft security telemetry concepts
-
-
-
-No real-world systems were targeted as part of this project.
