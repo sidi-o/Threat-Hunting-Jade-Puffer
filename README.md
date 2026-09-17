@@ -141,26 +141,22 @@ The Python interpreter was spawned by the Langflow process.
 ```kql
 Syslog
 | where RunId_CF =~ "jp-46-20260730"
-| where ProcessName =~ "langflow"
-    and SyslogMessage has "validate/code"
+| where ProcessName =~ "langflow" and SyslogMessage has "validate/code"
 | project TimeGenerated, SyslogMessage
 ```
-<img width="1162" height="336" alt="image" src="https://github.com/user-attachments/assets/4d5bffc1-63b4-462c-83de-c178d54a6fac" />
+<img width="1422" height="288" alt="image" src="https://github.com/user-attachments/assets/9f0d4865-a857-4f6c-9be0-b10e42e80a80" />
 
-<img width="943" height="348" alt="image" src="https://github.com/user-attachments/assets/240f6a7d-f08f-4e46-910e-e01d96197cea" />
 
 Process validation:
 
 ```kql
 LinuxProcess_CL
 | where RunId =~ "jp-46-20260730"
-| where DvcHostname =~ "ff-lf-01"
-    and TargetProcessName =~ "python3.11"
-| project TimeGenerated,
-          TargetProcessName,
-          ActingProcessCommandLine
+| where DvcHostname =~ "ff-lf-01" and TargetProcessName =~ "python3.11"
+| project TimeGenerated, TargetProcessName, ActingProcessCommandLine
 ```
-<img width="1167" height="362" alt="image" src="https://github.com/user-attachments/assets/6f8a7eb6-c3fa-4933-89df-f0363deca937" />
+<img width="1416" height="338" alt="image" src="https://github.com/user-attachments/assets/ec02d54d-0d7a-4396-900b-406ddebda76c" />
+
 
 
 ### MITRE ATT&CK
@@ -192,11 +188,10 @@ The investigation showed that this conclusion was unsupported.
 ```kql
 LinuxProcess_CL
 | where RunId =~ "jp-46-20260730"
-| summarize
-    total = count(),
-    has_hash = countif(isnotempty(TargetProcessSHA256))
+| summarize total = count(), has_hash = countif(isnotempty(TargetProcessSHA256))
 ```
-<img width="1173" height="323" alt="image" src="https://github.com/user-attachments/assets/0648d5ee-3422-402c-97ab-3044745a2b5e" />
+<img width="1422" height="285" alt="image" src="https://github.com/user-attachments/assets/701fbd60-3aac-465a-b39b-cc366309ac55" />
+
 
 
 The `TargetProcessSHA256` field was empty across the process telemetry.
@@ -246,14 +241,11 @@ while the suspected C2 communication used:
 ```kql
 LinuxNetwork_CL
 | where RunId =~ "jp-46-20260730"
-| where DvcHostname =~ "ff-lf-01"
-    and DstPortNumber == 4444
-| project
-    TimeGenerated,
-    DstIpAddr,
-    DstPortNumber
+| where DvcHostname =~ "ff-lf-01" and DstPortNumber == 4444
+| project TimeGenerated, DstIpAddr, DstPortNumber
 ```
-<img width="986" height="495" alt="image" src="https://github.com/user-attachments/assets/23bcc103-c3b5-46e4-ad1a-65951da17d7b" />
+<img width="1417" height="288" alt="image" src="https://github.com/user-attachments/assets/eff584ff-0986-4864-bfd9-cc61ba20a5a9" />
+
 
 
 ### MITRE ATT&CK
@@ -274,12 +266,14 @@ langflow
 LinuxSystem_CL
 | where RunId =~ "jp-46-20260730"
 | where Facility =~ "cron"
-| where computer =~ "ff-lf-01"
+| where Computer =~ "ff-lf-01"
 | extend VisualIntervalle = bin(TimeGenerated, 30m)
 | summarize NombreExecutions = count() by VisualIntervalle, Mechanism = "cron", RunId, Facility
 | order by VisualIntervalle asc
 ```
-<img width="1197" height="375" alt="image" src="https://github.com/user-attachments/assets/2043fcb2-2f9a-4c95-8eab-63adaf749ffa" />
+<img width="1406" height="671" alt="image" src="https://github.com/user-attachments/assets/ae653e98-ae48-424c-989d-dc2ff1ab71a1" />
+
+
 
 
 ### MITRE ATT&CK
@@ -324,7 +318,8 @@ LinuxProcess_CL
 | where TargetProcessName =~ "pg_dump"
 | project TimeGenerated, TargetUsername,TargetProcessCommandLine
 ```
-<img width="1272" height="427" alt="image" src="https://github.com/user-attachments/assets/d066654e-916e-4152-a717-76dc9b021791" />
+<img width="1405" height="417" alt="image" src="https://github.com/user-attachments/assets/a4dfc7ca-b775-46a9-a635-e1b6fc57e8f4" />
+
 
 ### Detection Insight
 
@@ -372,7 +367,8 @@ LLMAgentLogs_CL
 | where model_response has "keys" and model_response has "provider"
 | project TimeGenerated, model_response
 ```
-<img width="1283" height="330" alt="image" src="https://github.com/user-attachments/assets/79d42a4b-bb84-43a7-a1de-924afc0d9090" />
+<img width="1425" height="295" alt="image" src="https://github.com/user-attachments/assets/e2147570-c54c-495b-b004-bf3f82a04fef" />
+
 
 
 ### MITRE ATT&CK
@@ -399,7 +395,8 @@ LinuxProcess_CL
 | where DvcHostname =~ "ff-lf-01" and TargetProcessName =~ "python3.11"
 | project TimeGenerated, TargetProcessId, ActingProcessCommandLine
 ```
-<img width="1443" height="442" alt="image" src="https://github.com/user-attachments/assets/2ae8fd91-ccd6-4aeb-ad3f-c992213e065f" />
+<img width="1420" height="337" alt="image" src="https://github.com/user-attachments/assets/cfb3ff4d-e524-47f2-96c7-bb72f0e7f765" />
+
 
 ---
 
@@ -422,7 +419,8 @@ LinuxNetwork_CL
 | project TimeGenerated, DstIpAddr, DstPortNumber
 | sort by TimeGenerated asc
 ```
-<img width="1437" height="393" alt="image" src="https://github.com/user-attachments/assets/b30f0fdc-a86b-4e38-a58a-93136ee7f2a2" />
+<img width="1415" height="342" alt="image" src="https://github.com/user-attachments/assets/eada46dc-f0c5-4e8d-a3ab-3561eafab958" />
+
 
 
 ### MITRE ATT&CK
@@ -468,7 +466,8 @@ Syslog
 | where Computer =~ "ff-minio-01" and SyslogMessage has "GetObject"
 | project TimeGenerated,  SyslogMessage
 ```
-<img width="1402" height="412" alt="image" src="https://github.com/user-attachments/assets/8c246a89-f021-4297-bd44-28525cdcaf3e" />
+<img width="1407" height="305" alt="image" src="https://github.com/user-attachments/assets/20f54a52-2c70-408d-bec8-1382ac7c702b" />
+
 
 
 
@@ -504,7 +503,8 @@ LLMAgentLogs_CL
 | where model_response has "XML" or model_response has "JSON"
 | project TimeGenerated, model_response
 ```
-<img width="1596" height="507" alt="image" src="https://github.com/user-attachments/assets/818b116a-8728-4fde-84fa-dd712f9d59f6" />
+<img width="1421" height="306" alt="image" src="https://github.com/user-attachments/assets/9fdf1ce4-45cc-4dc9-ae3e-159cc7172cce" />
+
 
 
 This provides behavioral evidence of an automated agent adapting its execution based on tool output.
@@ -533,7 +533,8 @@ Syslog
 | where Computer =~ "ff-nacos-01" and SyslogMessage has "403"
 | project TimeGenerated, SyslogMessage
 ```
-<img width="1580" height="477" alt="image" src="https://github.com/user-attachments/assets/0220147d-a2a2-4497-a535-5e97d57bd1dc" />
+<img width="1413" height="277" alt="image" src="https://github.com/user-attachments/assets/b08d8f5f-7516-47dd-a15a-fe8afdc2190b" />
+
 
 
 The attempted technique was associated with:
@@ -567,7 +568,8 @@ LinuxAudit_CL
 | where Computer =~ "ff-nacos-01" and AuditType =~ "ADD_USER"
 | project TimeGenerated, EventOriginalMessage
 ```
-<img width="1588" height="466" alt="image" src="https://github.com/user-attachments/assets/3bdbd465-0f17-44d8-a506-7af4d8df84af" />
+<img width="1647" height="281" alt="image" src="https://github.com/user-attachments/assets/d5d99aa0-a936-4540-ad0b-37891aa020b1" />
+
 
 
 ### Account Created
@@ -608,7 +610,8 @@ LinuxContainer_CL
 | where RunId =~ "jp-46-20260730"
 | project TimeGenerated, Computer, RuntimeService, Operation
 ```
-<img width="1415" height="338" alt="image" src="https://github.com/user-attachments/assets/cbb607d9-8e34-49fd-9b29-87cda929d2f3" />
+<img width="1415" height="281" alt="image" src="https://github.com/user-attachments/assets/c387aa27-631b-4ec6-a88d-72789af261dd" />
+
 
 
 ### Finding
@@ -658,7 +661,8 @@ Syslog
 | where Computer =~ "ff-db-01" and (SyslogMessage has "AES_ENCRYPT" or SyslogMessage has "DROP TABLE")
 | project TimeGenerated, SyslogMessage
 ```
-<img width="1417" height="382" alt="image" src="https://github.com/user-attachments/assets/8d146f27-0e49-4d1e-988f-a2a0e4391c30" />
+<img width="1416" height="337" alt="image" src="https://github.com/user-attachments/assets/253c2ea3-dae4-4568-bba0-950a9ad8d282" />
+
 
 
 ### MITRE ATT&CK
@@ -692,7 +696,8 @@ Syslog
 | where Computer =~ "ff-db-01" and SyslogMessage has "README_RANSOM"
 | project TimeGenerated, SyslogMessage
 ```
-<img width="1422" height="367" alt="image" src="https://github.com/user-attachments/assets/4601b092-2b96-459e-8a28-e928c5d367b0" />
+<img width="1418" height="305" alt="image" src="https://github.com/user-attachments/assets/cf312231-4894-4418-9bdb-59d587c03439" />
+
 
 
 The investigation notes that this address corresponds to a Bitcoin documentation/example address rather than a usable ransom-payment destination.
@@ -724,10 +729,11 @@ The subsequent telemetry contained multiple `model_response` records showing the
 ```kql
 LLMAgentLogs_CL
 | where RunId =~ "jp-46-20260730"
-| summarize count() by actor, session_id
+| summarize count() by TimeGenerated, actor, session_id
 | sort by count_ desc
 ```
-<img width="1417" height="447" alt="image" src="https://github.com/user-attachments/assets/2923cbae-d4ac-4f1a-8991-fd2319a64d04" />
+<img width="1402" height="691" alt="image" src="https://github.com/user-attachments/assets/7d616787-968c-4b05-bca1-6e0ff1e87fdc" />
+
 
 
 Further investigation:
@@ -736,9 +742,10 @@ Further investigation:
 LLMAgentLogs_CL
 | where RunId =~ "jp-46-20260730"
 | where session_id == "jp-7f3c9a21"
-| summarize count() by actor, model_response
+| summarize count() byTimeGenerated, actor, model_response
 ```
-<img width="1412" height="618" alt="image" src="https://github.com/user-attachments/assets/344366cb-611f-4a43-98aa-de1e982b5471" />
+<img width="1647" height="563" alt="image" src="https://github.com/user-attachments/assets/392cd579-b9ff-4515-9bbf-1c73d17951c0" />
+
 
 
 ### Evidence
@@ -800,7 +807,8 @@ LinuxProcess_CL
 | where DvcHostname =~ "ff-lf-01" and TargetProcessName =~ "python3.11"
 | summarize count() by ActingProcessName
 ```
-<img width="1417" height="305" alt="image" src="https://github.com/user-attachments/assets/b975dc35-0023-4b13-8be9-09c32eac1290" />
+<img width="1423" height="311" alt="image" src="https://github.com/user-attachments/assets/1d4e1eb3-0125-463d-b588-0b54b66bb1cb" />
+
 
 
 This demonstrates why:
@@ -849,7 +857,8 @@ LinuxNetwork_CL
 | where DvcHostname =~ "ff-lf-01" and DstIpAddr !startswith "10."
 | summarize count() by DstIpAddr, DstPortNumber
 ```
-<img width="1412" height="425" alt="image" src="https://github.com/user-attachments/assets/78f33698-bc14-485f-bdeb-4a0fb3ae27d1" />
+<img width="1420" height="425" alt="image" src="https://github.com/user-attachments/assets/46994043-8561-4909-8721-6a64028a1825" />
+
 
 
 The investigation therefore used **connection behavior and port context**, rather than relying solely on the destination IP.
